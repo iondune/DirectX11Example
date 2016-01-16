@@ -92,8 +92,7 @@ int main()
 
 	// Create Device
 
-	DXGI_SWAP_CHAIN_DESC SwapChainDesc;
-	ZeroMemory(&SwapChainDesc, sizeof(SwapChainDesc));
+	DXGI_SWAP_CHAIN_DESC SwapChainDesc = {};
 	SwapChainDesc.BufferDesc.Width = WindowSizeX;
 	SwapChainDesc.BufferDesc.Height = WindowSizeY;
 	SwapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -138,8 +137,7 @@ int main()
 	// Create Depth Stencil Texture View
 
 	ID3D11Texture2D * DepthStencilTexture = nullptr;
-	D3D11_TEXTURE2D_DESC DepthDesc;
-	ZeroMemory(&DepthDesc, sizeof(DepthDesc));
+	D3D11_TEXTURE2D_DESC DepthDesc = {};
 	DepthDesc.Width = WindowSizeX;
 	DepthDesc.Height = WindowSizeY;
 	DepthDesc.MipLevels = 1;
@@ -149,31 +147,25 @@ int main()
 	DepthDesc.SampleDesc.Quality = 0;
 	DepthDesc.Usage = D3D11_USAGE_DEFAULT;
 	DepthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	DepthDesc.CPUAccessFlags = 0;
-	DepthDesc.MiscFlags = 0;
 	assert(S_OK == Device->CreateTexture2D(&DepthDesc, nullptr, &DepthStencilTexture));
 
 	ID3D11DepthStencilView * DepthStencilView = nullptr;
-	D3D11_DEPTH_STENCIL_VIEW_DESC DSVDesc;
-	ZeroMemory(&DSVDesc, sizeof(DSVDesc));
+	D3D11_DEPTH_STENCIL_VIEW_DESC DSVDesc = {};
 	DSVDesc.Format = DepthDesc.Format;
 	DSVDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	DSVDesc.Texture2D.MipSlice = 0;
 	assert(S_OK == Device->CreateDepthStencilView(DepthStencilTexture, &DSVDesc, &DepthStencilView));
 	DepthStencilTexture->Release();
 
 	// Viewport
 
-	D3D11_VIEWPORT Viewport;
+	D3D11_VIEWPORT Viewport = {};
 	Viewport.Width = (FLOAT) WindowSizeX;
 	Viewport.Height = (FLOAT) WindowSizeY;
 	Viewport.MinDepth = 0.0f;
 	Viewport.MaxDepth = 1.0f;
-	Viewport.TopLeftX = 0;
-	Viewport.TopLeftY = 0;
 	ImmediateContext->RSSetViewports(1, &Viewport);
 
-	// Shader
+	// Shaders
 
 	ID3D11VertexShader * VertexShader = nullptr;
 	ID3D11InputLayout * VertexLayout = nullptr;
@@ -196,45 +188,35 @@ int main()
 	// Constant Buffer
 
 	ID3D11Buffer * ConstantBuffer = nullptr;
-
-	D3D11_BUFFER_DESC BufferDesc;
-	ZeroMemory(&BufferDesc, sizeof(BufferDesc));
+	D3D11_BUFFER_DESC BufferDesc = {};
 	BufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	BufferDesc.ByteWidth = sizeof(SConstantBuffer);
 	BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	BufferDesc.CPUAccessFlags = 0;
 	assert(S_OK == Device->CreateBuffer(&BufferDesc, nullptr, &ConstantBuffer));
-
-	DirectX::XMMATRIX const WorldMatrix = DirectX::XMMatrixIdentity();
-	DirectX::XMMATRIX const ProjectionMatrix = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4, WindowSizeX / (FLOAT) WindowSizeY, 0.01f, 100.0f);
 
 	// Mesh
 
 	std::vector<SimpleVertex> Vertices;
 	std::vector<uint32_t> Indices;
-	ID3D11Buffer * VertexBuffer = nullptr;
-	ID3D11Buffer * IndexBuffer = nullptr;
-
-	//Geometry::MakeSphere(Vertices, Indices, 1.f, 128);
 	Geometry::LoadOBJ(Vertices, Indices, "bunny.obj");
 
-	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(SimpleVertex) * Vertices.size();
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.CPUAccessFlags = 0;
-	D3D11_SUBRESOURCE_DATA InitData;
-	ZeroMemory(&InitData, sizeof(InitData));
+	ID3D11Buffer * VertexBuffer = nullptr;
+	D3D11_BUFFER_DESC VertexBufferDesc = {};
+	VertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	VertexBufferDesc.ByteWidth = sizeof(SimpleVertex) * Vertices.size();
+	VertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	D3D11_SUBRESOURCE_DATA InitData = {};
 	InitData.pSysMem = Vertices.data();
-	assert(S_OK == Device->CreateBuffer(&bd, &InitData, &VertexBuffer));
+	assert(S_OK == Device->CreateBuffer(&VertexBufferDesc, &InitData, &VertexBuffer));
 
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(uint32_t) * Indices.size();
-	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	bd.CPUAccessFlags = 0;
+	ID3D11Buffer * IndexBuffer = nullptr;
+	D3D11_BUFFER_DESC IndexBufferDesc = {};
+	IndexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	IndexBufferDesc.ByteWidth = sizeof(uint32_t) * Indices.size();
+	IndexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	IndexBufferDesc.CPUAccessFlags = 0;
 	InitData.pSysMem = Indices.data();
-	assert(S_OK == Device->CreateBuffer(&bd, &InitData, &IndexBuffer));
+	assert(S_OK == Device->CreateBuffer(&IndexBufferDesc, &InitData, &IndexBuffer));
 	
 	// Main Loop
 
@@ -242,7 +224,7 @@ int main()
 
 	std::function<void()> Render = [&]
 	{
-		Time += 0.001f;
+		Time += 0.0005f;
 
 		ImmediateContext->ClearRenderTargetView(RenderTargetView, DirectX::Colors::MidnightBlue);
 		ImmediateContext->ClearDepthStencilView(DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -259,6 +241,12 @@ int main()
 		DirectX::XMVECTOR const Eye = DirectX::XMVectorSet(0.f, 0.1f, 0.3f, 1.f);
 		DirectX::XMVECTOR const At = DirectX::XMVectorSet(0.f, 0.1f, 0.f, 1.f);
 		DirectX::XMVECTOR const Up = DirectX::XMVectorSet(0.f, 1.f, 0.f, 1.f);
+
+		DirectX::XMMATRIX const WorldMatrix = DirectX::XMMatrixIdentity();
+		DirectX::XMMATRIX const ProjectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
+			DirectX::XM_PIDIV4,
+			WindowSizeX / (FLOAT) WindowSizeY,
+			0.01f, 100.0f);
 		DirectX::XMMATRIX const ViewMatrix = DirectX::XMMatrixLookAtLH(Eye, At, Up);
 
 		SConstantBuffer ConstantBufferData;
