@@ -98,16 +98,15 @@ ShaderBlob *Helper_LoadShaderBlob(std::string const & FileName)
 
 struct SConstantBuffer
 {
-	DirectX::XMMATRIX mWorld;
-	DirectX::XMMATRIX mView;
-	DirectX::XMMATRIX mProjection;
-	DirectX::XMFLOAT4 vLightDir;
-	DirectX::XMFLOAT4 vLightColor;
-	DirectX::XMFLOAT4 vOutputColor;
-	DirectX::XMFLOAT3 Eye;
+	DirectX::XMMATRIX World;
+	DirectX::XMMATRIX View;
+	DirectX::XMMATRIX Projection;
+	DirectX::XMFLOAT4 Eye;
+
+	DirectX::XMFLOAT4 LightPosition;
+	DirectX::XMFLOAT4 LightColor;
+
 	float Specularity;
-	float Roughness;
-	float IndexOfRefraction;
 };
 
 int main()
@@ -160,7 +159,7 @@ int main()
 	ID3D11Device * Device = nullptr;
 	ID3D11DeviceContext * ImmediateContext = nullptr;
 
-	UINT CreateDeviceFlags = D3D11_CREATE_DEVICE_SINGLETHREADED;
+	UINT CreateDeviceFlags = 0;
 #ifdef _DEBUG
 	CreateDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
@@ -175,6 +174,9 @@ int main()
 		&Device,
 		NULL,
 		&ImmediateContext);
+
+	ID3D11Debug * DebugDevice = nullptr;
+	Device->QueryInterface(IID_PPV_ARGS(&DebugDevice));
 
 	// Create Render Target
 
@@ -209,6 +211,7 @@ int main()
 	DSVDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	DSVDesc.Texture2D.MipSlice = 0;
 	assert(S_OK == Device->CreateDepthStencilView(DepthStencilTexture, &DSVDesc, &DepthStencilView));
+	DepthStencilTexture->Release();
 
 	// Viewport
 
@@ -262,8 +265,30 @@ int main()
 
 	// Mesh
 
-	Mesh mesh = GeometryCreator::MakeSphere(1.f, 128);
-	mesh.Load(Device);
+	std::vector<SimpleVertex> Vertices;
+	std::vector<uint32_t> Indices;
+	ID3D11Buffer * VertexBuffer = nullptr;
+	ID3D11Buffer * IndexBuffer = nullptr;
+
+	GeometryCreator::MakeSphere(Vertices, Indices, 1.f, 128);
+
+	D3D11_BUFFER_DESC bd;
+	ZeroMemory(&bd, sizeof(bd));
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(SimpleVertex) * Vertices.size();
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+	D3D11_SUBRESOURCE_DATA InitData;
+	ZeroMemory(&InitData, sizeof(InitData));
+	InitData.pSysMem = Vertices.data();
+	assert(S_OK == Device->CreateBuffer(&bd, &InitData, &VertexBuffer));
+
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(uint32_t) * Indices.size();
+	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+	InitData.pSysMem = Indices.data();
+	assert(S_OK == Device->CreateBuffer(&bd, &InitData, &IndexBuffer));
 	
 	// Main Loop
 
@@ -282,7 +307,11 @@ int main()
 		ImmediateContext->ClearDepthStencilView(DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 		ImmediateContext->OMSetRenderTargets(1, &RenderTargetView, DepthStencilView);
 
-		mesh.Set(ImmediateContext);
+		UINT Stride = sizeof(SimpleVertex);
+		UINT Offset = 0;
+		ImmediateContext->IASetVertexBuffers(0, 1, &VertexBuffer, &Stride, &Offset);
+		ImmediateContext->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
 		ImmediateContext->IASetInputLayout(VertexLayout);
 		ImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -295,13 +324,14 @@ int main()
 		float const Roughness = 0.5f;
 
 		SConstantBuffer cbData;
-		cbData.mWorld = XMMatrixTranspose(WorldMatrix);
-		cbData.mView = XMMatrixTranspose(ViewMatrix);
-		cbData.mProjection = XMMatrixTranspose(ProjectionMatrix);
-		cbData.vLightDir = DirectX::XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f);
-		cbData.vLightColor = DirectX::XMFLOAT4(1, 1, 1, 1);
-		cbData.vOutputColor = DirectX::XMFLOAT4(0.5, 0.5, 0.5, 1);
-		cbData.Eye = DirectX::XMFLOAT3(Eye.m128_f32[0], Eye.m128_f32[1], Eye.m128_f32[2]);
+		cbData.World = XMMatrixTranspose(WorldMatrix);
+		cbData.View = XMMatrixTranspose(ViewMatrix);
+		cbData.Projection = XMMatrixTranspose(ProjectionMatrix);
+		cbData.Eye = DirectX::XMFLOAT4(Eye.m128_f32[0], Eye.m128_f32[1], Eye.m128_f32[2], 1);
+
+		cbData.LightPosition = DirectX::XMFLOAT4(3, -15, 3, 1);
+		cbData.LightColor = DirectX::XMFLOAT4(1, 1, 1, 1);
+
 		cbData.Specularity = Specularity;
 		ImmediateContext->UpdateSubresource(ConstantBuffer, 0, nullptr, &cbData, 0, 0);
 
@@ -309,7 +339,7 @@ int main()
 		ImmediateContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
 		ImmediateContext->PSSetShader(PixelShader, nullptr, 0);
 		ImmediateContext->PSSetConstantBuffers(0, 1, &ConstantBuffer);
-		ImmediateContext->DrawIndexed(mesh.Indices.size(), 0, 0);
+		ImmediateContext->DrawIndexed(Indices.size(), 0, 0);
 
 		ImmediateContext->IASetInputLayout(nullptr);
 		ImmediateContext->PSSetShader(nullptr, nullptr, 0);
@@ -317,6 +347,28 @@ int main()
 
 		SwapChain->Present(0, 0);
 	}
+
+	// Cleanup
+
+	VertexBuffer->Release();
+	IndexBuffer->Release();
+	ConstantBuffer->Release();
+
+	VertexLayout->Release();
+
+	VertexShader->Release();
+	PixelShader->Release();
+
+	RenderTargetView->Release();
+	DepthStencilView->Release();
+
+	ImmediateContext->Release();
+	SwapChain->Release();
+
+	//DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+	DebugDevice->Release();
+	Device->Release();
+
 
 	return 0;
 }

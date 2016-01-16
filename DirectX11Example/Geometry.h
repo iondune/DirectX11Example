@@ -18,21 +18,8 @@ struct SimpleVertex
 	}
 };
 
-struct Mesh
-{
-	std::vector<SimpleVertex> Vertices;
-	std::vector<unsigned int> Indices;
-
-	ID3D11Buffer* VertexBuffer = nullptr;
-	ID3D11Buffer* IndexBuffer = nullptr;
-
-	HRESULT Load(ID3D11Device * Device);
-	void Set(ID3D11DeviceContext * ImmediateContext);
-	void Release();
-};
-
 struct GeometryCreator
 {
-	static Mesh MakeCube();
-	static Mesh MakeSphere(float const Radius, int const Tesselation);
+	static void MakeCube(std::vector<SimpleVertex> & Vertices, std::vector<uint32_t> & Indices);
+	static void MakeSphere(std::vector<SimpleVertex> & Vertices, std::vector<uint32_t> & Indices, float const Radius, int const Tesselation);
 };

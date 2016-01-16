@@ -4,10 +4,11 @@ cbuffer ConstantBuffer : register(b0)
 	matrix World;
 	matrix View;
 	matrix Projection;
-	float4 LightDir;
+	float4 Eye;
+
+	float4 LightPosition;
 	float4 LightColor;
-	float4 OutputColor;
-	float3 Eye;
+
 	float Specularity;
 }
 
