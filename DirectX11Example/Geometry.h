@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <d3d11.h>
 #include <DirectXMath.h>
 #include <vector>
 
@@ -18,8 +17,11 @@ struct SimpleVertex
 	}
 };
 
-struct GeometryCreator
+struct Geometry
 {
 	static void MakeCube(std::vector<SimpleVertex> & Vertices, std::vector<uint32_t> & Indices);
 	static void MakeSphere(std::vector<SimpleVertex> & Vertices, std::vector<uint32_t> & Indices, float const Radius, int const Tesselation);
+	static void LoadOBJ(std::vector<SimpleVertex> & Vertices, std::vector<uint32_t> & Indices, std::string const & FileName);
+
+	static void CalculateNormals(std::vector<SimpleVertex> & Vertices, std::vector<uint32_t> & Indices);
 };

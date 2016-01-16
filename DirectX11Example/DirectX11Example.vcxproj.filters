@@ -3,10 +3,15 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Geometry.cpp" />
+    <ClCompile Include="tiny_obj_loader.cpp" />
+    <ClCompile Include="DWUT.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
       <UniqueIdentifier>{2f080fb1-4122-48a5-9523-cc851282545f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{8bd08377-c97a-47eb-b4fb-8a014c12961c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -24,5 +29,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Geometry.h" />
+    <ClInclude Include="tiny_obj_loader.h" />
+    <ClInclude Include="DWUT.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="bunny.obj">
+      <Filter>Assets</Filter>
+    </Media>
   </ItemGroup>
 </Project>

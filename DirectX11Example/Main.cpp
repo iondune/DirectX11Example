@@ -1,5 +1,5 @@
 
-#include <Windows.h>
+#include "DWUT.h"
 #include <d3d11.h>
 #include <dxgi.h>
 #include <cassert>
@@ -15,32 +15,6 @@
 
 static int const WindowSizeX = 1024;
 static int const WindowSizeY = 768;
-
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	PAINTSTRUCT ps;
-	HDC hdc;
-
-	switch (message)
-	{
-
-	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);
-		EndPaint(hWnd, &ps);
-		break;
-
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
-
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-		break;
-
-	}
-
-	return 0;
-}
 
 
 struct ShaderBlob
@@ -113,36 +87,11 @@ int main()
 {
 	// Create Window
 
-	HINSTANCE hInstance = GetModuleHandle(0);
-
-	WNDCLASSEX wcex;
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = WndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
-	wcex.hInstance = hInstance;
-	wcex.hIcon = nullptr;
-	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH) (COLOR_WINDOW + 1);
-	wcex.lpszMenuName = nullptr;
-	wcex.lpszClassName = "ionEngineWindowClass";
-	wcex.hIconSm = nullptr;
-
-	assert(RegisterClassEx(&wcex));
-
-	RECT rc = { 0, 0, WindowSizeX, WindowSizeY };
-	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, false);
-
-	HWND Handle = CreateWindow("ionEngineWindowClass", "DirectX 11 Example",
-		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-		CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, hInstance,
-		nullptr);
-
-	ShowWindow(Handle, SW_SHOW);
-	UpdateWindow(Handle);
+	dwutInit();
+	dwutCreateWindow(WindowSizeX, WindowSizeY);
 
 	// Create Device
+
 	DXGI_SWAP_CHAIN_DESC SwapChainDesc;
 	ZeroMemory(&SwapChainDesc, sizeof(SwapChainDesc));
 	SwapChainDesc.BufferDesc.Width = WindowSizeX;
@@ -152,7 +101,7 @@ int main()
 	SwapChainDesc.SampleDesc.Quality = 0;
 	SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	SwapChainDesc.BufferCount = 1;
-	SwapChainDesc.OutputWindow = Handle;
+	SwapChainDesc.OutputWindow = dwutGetWindowHandle();
 	SwapChainDesc.Windowed = true;
 
 	IDXGISwapChain * SwapChain = nullptr;
@@ -257,11 +206,7 @@ int main()
 	assert(S_OK == Device->CreateBuffer(&BufferDesc, nullptr, &ConstantBuffer));
 
 	DirectX::XMMATRIX const WorldMatrix = DirectX::XMMatrixIdentity();
-
-	GetClientRect(Handle, &rc);
-	UINT width = rc.right - rc.left;
-	UINT height = rc.bottom - rc.top;
-	DirectX::XMMATRIX const ProjectionMatrix = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4, width / (FLOAT) height, 0.01f, 100.0f);
+	DirectX::XMMATRIX const ProjectionMatrix = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4, WindowSizeX / (FLOAT) WindowSizeY, 0.01f, 100.0f);
 
 	// Mesh
 
@@ -270,7 +215,8 @@ int main()
 	ID3D11Buffer * VertexBuffer = nullptr;
 	ID3D11Buffer * IndexBuffer = nullptr;
 
-	GeometryCreator::MakeSphere(Vertices, Indices, 1.f, 128);
+	//Geometry::MakeSphere(Vertices, Indices, 1.f, 128);
+	Geometry::LoadOBJ(Vertices, Indices, "bunny.obj");
 
 	D3D11_BUFFER_DESC bd;
 	ZeroMemory(&bd, sizeof(bd));
@@ -292,16 +238,11 @@ int main()
 	
 	// Main Loop
 
-	int MessageStatus = 0;
-	MSG Message;
+	float Time = 0;
 
-	while ((MessageStatus = GetMessage(&Message, NULL, 0, 0)) != 0)
+	std::function<void()> Render = [&]
 	{
-		if (MessageStatus != -1)
-		{
-			TranslateMessage(&Message);
-			DispatchMessage(&Message);
-		}
+		Time += 0.001f;
 
 		ImmediateContext->ClearRenderTargetView(RenderTargetView, DirectX::Colors::MidnightBlue);
 		ImmediateContext->ClearDepthStencilView(DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -315,8 +256,8 @@ int main()
 		ImmediateContext->IASetInputLayout(VertexLayout);
 		ImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		DirectX::XMVECTOR const Eye = DirectX::XMVectorSet(0.0f, 0.0f, -10.0f, 0.0f);
-		DirectX::XMVECTOR const At = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		DirectX::XMVECTOR const Eye = DirectX::XMVectorSet(0.0f, 0.1f, 0.3f, 0.0f);
+		DirectX::XMVECTOR const At = DirectX::XMVectorSet(0.0f, 0.1f, 0.0f, 0.0f);
 		DirectX::XMVECTOR const Up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 		DirectX::XMMATRIX const ViewMatrix = DirectX::XMMatrixLookAtLH(Eye, At, Up);
 
@@ -346,29 +287,33 @@ int main()
 		ImmediateContext->VSSetShader(nullptr, nullptr, 0);
 
 		SwapChain->Present(0, 0);
-	}
+	};
+	
+	std::function<void()> Cleanup = [&]
+	{
+		VertexBuffer->Release();
+		IndexBuffer->Release();
+		ConstantBuffer->Release();
 
-	// Cleanup
+		VertexLayout->Release();
 
-	VertexBuffer->Release();
-	IndexBuffer->Release();
-	ConstantBuffer->Release();
+		VertexShader->Release();
+		PixelShader->Release();
 
-	VertexLayout->Release();
+		RenderTargetView->Release();
+		DepthStencilView->Release();
 
-	VertexShader->Release();
-	PixelShader->Release();
+		ImmediateContext->Release();
+		SwapChain->Release();
 
-	RenderTargetView->Release();
-	DepthStencilView->Release();
+		//DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+		DebugDevice->Release();
+		Device->Release();
+	};
 
-	ImmediateContext->Release();
-	SwapChain->Release();
-
-	//DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-	DebugDevice->Release();
-	Device->Release();
-
+	dwutRenderCallback(Render);
+	dwutCleanupCallback(Cleanup);
+	dwutMainLoop();
 
 	return 0;
 }
