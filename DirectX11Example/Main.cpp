@@ -127,7 +127,7 @@ int main()
 	ID3D11Debug * DebugDevice = nullptr;
 	Device->QueryInterface(IID_PPV_ARGS(&DebugDevice));
 
-	// Create Render Target
+	// Create Render Target View
 
 	ID3D11Texture2D * BackBuffer = nullptr;
 	ID3D11RenderTargetView * RenderTargetView = nullptr;
@@ -135,7 +135,7 @@ int main()
 	assert(S_OK == Device->CreateRenderTargetView(BackBuffer, nullptr, &RenderTargetView));
 	BackBuffer->Release();
 
-	// Create Depth Stencil Texture
+	// Create Depth Stencil Texture View
 
 	ID3D11Texture2D * DepthStencilTexture = nullptr;
 	D3D11_TEXTURE2D_DESC DepthDesc;
@@ -246,45 +246,36 @@ int main()
 
 		ImmediateContext->ClearRenderTargetView(RenderTargetView, DirectX::Colors::MidnightBlue);
 		ImmediateContext->ClearDepthStencilView(DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
 		ImmediateContext->OMSetRenderTargets(1, &RenderTargetView, DepthStencilView);
 
 		UINT Stride = sizeof(SimpleVertex);
 		UINT Offset = 0;
 		ImmediateContext->IASetVertexBuffers(0, 1, &VertexBuffer, &Stride, &Offset);
 		ImmediateContext->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
 		ImmediateContext->IASetInputLayout(VertexLayout);
 		ImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		DirectX::XMVECTOR const Eye = DirectX::XMVectorSet(0.0f, 0.1f, 0.3f, 0.0f);
-		DirectX::XMVECTOR const At = DirectX::XMVectorSet(0.0f, 0.1f, 0.0f, 0.0f);
-		DirectX::XMVECTOR const Up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+		DirectX::XMVECTOR const Eye = DirectX::XMVectorSet(0.f, 0.1f, 0.3f, 1.f);
+		DirectX::XMVECTOR const At = DirectX::XMVectorSet(0.f, 0.1f, 0.f, 1.f);
+		DirectX::XMVECTOR const Up = DirectX::XMVectorSet(0.f, 1.f, 0.f, 1.f);
 		DirectX::XMMATRIX const ViewMatrix = DirectX::XMMatrixLookAtLH(Eye, At, Up);
 
-		float const Specularity = 80;
-		float const Roughness = 0.5f;
-
-		SConstantBuffer cbData;
-		cbData.World = XMMatrixTranspose(WorldMatrix);
-		cbData.View = XMMatrixTranspose(ViewMatrix);
-		cbData.Projection = XMMatrixTranspose(ProjectionMatrix);
-		cbData.Eye = DirectX::XMFLOAT4(Eye.m128_f32[0], Eye.m128_f32[1], Eye.m128_f32[2], 1);
-
-		cbData.LightPosition = DirectX::XMFLOAT4(3, -15, 3, 1);
-		cbData.LightColor = DirectX::XMFLOAT4(1, 1, 1, 1);
-
-		cbData.Specularity = Specularity;
-		ImmediateContext->UpdateSubresource(ConstantBuffer, 0, nullptr, &cbData, 0, 0);
+		SConstantBuffer ConstantBufferData;
+		ConstantBufferData.World = XMMatrixTranspose(WorldMatrix);
+		ConstantBufferData.View = XMMatrixTranspose(ViewMatrix);
+		ConstantBufferData.Projection = XMMatrixTranspose(ProjectionMatrix);
+		ConstantBufferData.Eye = DirectX::XMFLOAT4(Eye.m128_f32[0], Eye.m128_f32[1], Eye.m128_f32[2], 1);
+		ConstantBufferData.LightPosition = DirectX::XMFLOAT4(0.1f, 0.3f + sin(Time)*0.1f, 0.1f, 1.f);
+		ConstantBufferData.LightColor = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
+		ConstantBufferData.Specularity = 80.f;
+		ImmediateContext->UpdateSubresource(ConstantBuffer, 0, nullptr, &ConstantBufferData, 0, 0);
 
 		ImmediateContext->VSSetShader(VertexShader, nullptr, 0);
 		ImmediateContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
 		ImmediateContext->PSSetShader(PixelShader, nullptr, 0);
 		ImmediateContext->PSSetConstantBuffers(0, 1, &ConstantBuffer);
 		ImmediateContext->DrawIndexed(Indices.size(), 0, 0);
-
-		ImmediateContext->IASetInputLayout(nullptr);
-		ImmediateContext->PSSetShader(nullptr, nullptr, 0);
-		ImmediateContext->VSSetShader(nullptr, nullptr, 0);
 
 		SwapChain->Present(0, 0);
 	};
