@@ -19,13 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{A3C71E40-25F7-41D5-B8D9-2B6F528CF6C9}</ProjectGuid>
-    <RootNamespace>DirectX11Example</RootNamespace>
+    <ProjectGuid>{CC4038FB-7B4A-49C2-84E9-A144C4217A94}</ProjectGuid>
+    <RootNamespace>DWUT</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
@@ -68,20 +68,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>S:\Windows\Documents\Visual Studio 2015\Projects\DirectX11Example\DWUT;$(IncludePath)</IncludePath>
-    <LibraryPath>S:\Windows\Documents\Visual Studio 2015\Projects\DirectX11Example\Debug;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;DWUT.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -89,9 +82,6 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -102,7 +92,6 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
@@ -116,37 +105,15 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Geometry.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="tiny_obj_loader.cpp" />
+    <ClCompile Include="DWUT.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="PixelShader.hlsl">
-      <ShaderType>Pixel</ShaderType>
-      <ObjectFileOutput>$(ProjectDir)%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-    <FxCompile Include="VertexShader.hlsl">
-      <ShaderType>Vertex</ShaderType>
-      <ObjectFileOutput>$(ProjectDir)%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Header.hlsli" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Geometry.h" />
-    <ClInclude Include="tiny_obj_loader.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Media Include="bunny.obj">
-      <FileType>Document</FileType>
-    </Media>
+    <ClInclude Include="DWUT.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

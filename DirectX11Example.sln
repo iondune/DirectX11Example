@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectX11Example", "DirectX11Example\DirectX11Example.vcxproj", "{A3C71E40-25F7-41D5-B8D9-2B6F528CF6C9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Simple", "Simple\Simple.vcxproj", "{0470F638-4915-470E-922C-A9A8FC91F571}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DWUT", "DWUT\DWUT.vcxproj", "{CC4038FB-7B4A-49C2-84E9-A144C4217A94}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,22 @@ Global
 		{A3C71E40-25F7-41D5-B8D9-2B6F528CF6C9}.Release|x64.Build.0 = Release|x64
 		{A3C71E40-25F7-41D5-B8D9-2B6F528CF6C9}.Release|x86.ActiveCfg = Release|Win32
 		{A3C71E40-25F7-41D5-B8D9-2B6F528CF6C9}.Release|x86.Build.0 = Release|Win32
+		{0470F638-4915-470E-922C-A9A8FC91F571}.Debug|x64.ActiveCfg = Debug|x64
+		{0470F638-4915-470E-922C-A9A8FC91F571}.Debug|x64.Build.0 = Debug|x64
+		{0470F638-4915-470E-922C-A9A8FC91F571}.Debug|x86.ActiveCfg = Debug|Win32
+		{0470F638-4915-470E-922C-A9A8FC91F571}.Debug|x86.Build.0 = Debug|Win32
+		{0470F638-4915-470E-922C-A9A8FC91F571}.Release|x64.ActiveCfg = Release|x64
+		{0470F638-4915-470E-922C-A9A8FC91F571}.Release|x64.Build.0 = Release|x64
+		{0470F638-4915-470E-922C-A9A8FC91F571}.Release|x86.ActiveCfg = Release|Win32
+		{0470F638-4915-470E-922C-A9A8FC91F571}.Release|x86.Build.0 = Release|Win32
+		{CC4038FB-7B4A-49C2-84E9-A144C4217A94}.Debug|x64.ActiveCfg = Debug|x64
+		{CC4038FB-7B4A-49C2-84E9-A144C4217A94}.Debug|x64.Build.0 = Debug|x64
+		{CC4038FB-7B4A-49C2-84E9-A144C4217A94}.Debug|x86.ActiveCfg = Debug|Win32
+		{CC4038FB-7B4A-49C2-84E9-A144C4217A94}.Debug|x86.Build.0 = Debug|Win32
+		{CC4038FB-7B4A-49C2-84E9-A144C4217A94}.Release|x64.ActiveCfg = Release|x64
+		{CC4038FB-7B4A-49C2-84E9-A144C4217A94}.Release|x64.Build.0 = Release|x64
+		{CC4038FB-7B4A-49C2-84E9-A144C4217A94}.Release|x86.ActiveCfg = Release|Win32
+		{CC4038FB-7B4A-49C2-84E9-A144C4217A94}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

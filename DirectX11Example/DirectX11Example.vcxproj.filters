@@ -4,7 +4,6 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="tiny_obj_loader.cpp" />
-    <ClCompile Include="DWUT.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -30,7 +29,6 @@
   <ItemGroup>
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="tiny_obj_loader.h" />
-    <ClInclude Include="DWUT.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="bunny.obj">
