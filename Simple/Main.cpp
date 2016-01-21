@@ -129,7 +129,6 @@ int main()
 	std::function<void()> Render = [&]
 	{
 		ImmediateContext->ClearRenderTargetView(RenderTargetView, DirectX::Colors::MidnightBlue);
-
 		ImmediateContext->OMSetRenderTargets(1, &RenderTargetView, nullptr);
 
 		UINT Stride = sizeof(float);
