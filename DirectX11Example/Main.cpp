@@ -1,12 +1,16 @@
 
-#include "DWUT.h"
 #include <d3d11.h>
 #include <dxgi.h>
-#include <cassert>
 
+#include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
+#include <cassert>
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <functional>
 
 #include "Geometry.h"
 
@@ -87,8 +91,16 @@ int main()
 {
 	// Create Window
 
-	dwutInit();
-	dwutCreateWindow(WindowSizeX, WindowSizeY);
+	if (! glfwInit())
+		return -1;
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	GLFWwindow* window = glfwCreateWindow(WindowSizeX, WindowSizeY, "Hello World", nullptr, nullptr);
+	if (! window)
+	{
+		glfwTerminate();
+		return -1;
+	}
 
 	// Create Device
 
@@ -100,7 +112,7 @@ int main()
 	SwapChainDesc.SampleDesc.Quality = 0;
 	SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	SwapChainDesc.BufferCount = 1;
-	SwapChainDesc.OutputWindow = dwutGetWindowHandle();
+	SwapChainDesc.OutputWindow = glfwGetWin32Window(window);
 	SwapChainDesc.Windowed = true;
 
 	IDXGISwapChain * SwapChain = nullptr;
@@ -203,7 +215,7 @@ int main()
 	ID3D11Buffer * VertexBuffer = nullptr;
 	D3D11_BUFFER_DESC VertexBufferDesc = {};
 	VertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	VertexBufferDesc.ByteWidth = sizeof(SimpleVertex) * Vertices.size();
+	VertexBufferDesc.ByteWidth = sizeof(SimpleVertex) * (unsigned int) Vertices.size();
 	VertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	D3D11_SUBRESOURCE_DATA InitData = {};
 	InitData.pSysMem = Vertices.data();
@@ -212,7 +224,7 @@ int main()
 	ID3D11Buffer * IndexBuffer = nullptr;
 	D3D11_BUFFER_DESC IndexBufferDesc = {};
 	IndexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	IndexBufferDesc.ByteWidth = sizeof(uint32_t) * Indices.size();
+	IndexBufferDesc.ByteWidth = sizeof(uint32_t) * (unsigned int) Indices.size();
 	IndexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	IndexBufferDesc.CPUAccessFlags = 0;
 	InitData.pSysMem = Indices.data();
@@ -224,7 +236,7 @@ int main()
 
 	std::function<void()> Render = [&]
 	{
-		Time += 0.0005f;
+		Time = (float) glfwGetTime();
 
 		ImmediateContext->ClearRenderTargetView(RenderTargetView, DirectX::Colors::MidnightBlue);
 		ImmediateContext->ClearDepthStencilView(DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -254,7 +266,7 @@ int main()
 		ConstantBufferData.View = XMMatrixTranspose(ViewMatrix);
 		ConstantBufferData.Projection = XMMatrixTranspose(ProjectionMatrix);
 		ConstantBufferData.Eye = DirectX::XMFLOAT4(Eye.m128_f32[0], Eye.m128_f32[1], Eye.m128_f32[2], 1);
-		ConstantBufferData.LightPosition = DirectX::XMFLOAT4(0.1f, 0.3f + sin(Time)*0.1f, 0.1f, 1.f);
+		ConstantBufferData.LightPosition = DirectX::XMFLOAT4(3.f + cos(Time)*2.f, 4.f + sin(Time)*2.f, 3.f, 1.f);
 		ConstantBufferData.LightColor = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
 		ConstantBufferData.Specularity = 80.f;
 		ImmediateContext->UpdateSubresource(ConstantBuffer, 0, nullptr, &ConstantBufferData, 0, 0);
@@ -263,7 +275,7 @@ int main()
 		ImmediateContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
 		ImmediateContext->PSSetShader(PixelShader, nullptr, 0);
 		ImmediateContext->PSSetConstantBuffers(0, 1, &ConstantBuffer);
-		ImmediateContext->DrawIndexed(Indices.size(), 0, 0);
+		ImmediateContext->DrawIndexed((unsigned int) Indices.size(), 0, 0);
 
 		SwapChain->Present(0, 0);
 	};
@@ -286,13 +298,19 @@ int main()
 		SwapChain->Release();
 
 		//DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-		DebugDevice->Release();
+		if (DebugDevice)
+			DebugDevice->Release();
 		Device->Release();
 	};
 
-	dwutRenderCallback(Render);
-	dwutCleanupCallback(Cleanup);
-	dwutMainLoop();
+	while (! glfwWindowShouldClose(window))
+	{
+		glfwPollEvents();
+
+		Render();
+	}
+
+	Cleanup();
 
 	return 0;
 }
